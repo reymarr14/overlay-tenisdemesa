@@ -158,7 +158,15 @@ const KEY='ttOverlayState';
 const PANEL=/control|panel/.test(location.search+location.hash);
 document.body.className=PANEL?'panel':'overlay';
 
-const C={ar:'Argentina',bb:'Barbados',bo:'Bolivia',br:'Brasil',ca:'Canadá',cl:'Chile',co:'Colombia',cr:'Costa Rica',cu:'Cuba',do:'Rep. Dominicana',ec:'Ecuador',sv:'El Salvador',gt:'Guatemala',gy:'Guyana',ht:'Haití',hn:'Honduras',jm:'Jamaica',mx:'México',ni:'Nicaragua',pa:'Panamá',py:'Paraguay',pe:'Perú',pr:'Puerto Rico',tt:'Trinidad y Tobago',us:'Estados Unidos',uy:'Uruguay',ve:'Venezuela'};
+const AM='ai ag ar aw bs bb bz bm bo br vg ca ky cl co cr cu cw dm do ec sv gd gt gy ht hn jm mx ms ni pa py pe pr kn lc vc sx sr tt tc us uy vi ve'.split(' ');
+const ALL=('ad ae af ag ai al am ao ar as at au aw ax az ba bb bd be bf bg bh bi bj bm bn bo br bs bt bw by bz ca cc cd cf cg ch ci ck cl cm cn co cr cu cv cw cx cy cz de dj dk dm do dz ec ee eg eh er es et fi fj fk fm fo fr ga gb gd ge gf gg gh gi gl gm gn gp gq gr gt gu gw gy hk hn hr ht hu id ie il im in iq ir is it je jm jo jp ke kg kh ki km kn kp kr kw ky kz la lb lc li lk lr ls lt lu lv ly ma mc md me mg mh mk ml mm mn mo mp mq mr ms mt mu mv mw mx my mz na nc ne nf ng ni nl no np nr nu nz om pa pe pf pg ph pk pl pm pn pr ps pt pw py qa re ro rs ru rw sa sb sc sd se sg sh si sk sl sm sn so sr ss st sv sx sy sz tc td tg th tj tk tl tm tn to tr tt tv tw tz ua ug us uy uz va vc ve vg vi vn vu wf ws xk ye yt za zm zw gb-eng gb-sct gb-wls gb-nir').split(' ');
+const OV={tw:'Taipéi Chino',hk:'Hong Kong',mo:'Macao',xk:'Kosovo','gb-eng':'Inglaterra','gb-sct':'Escocia','gb-wls':'Gales','gb-nir':'Irlanda del Norte'};
+let DN=null;try{DN=new Intl.DisplayNames(['es'],{type:'region'})}catch(e){}
+const nm=c=>{if(OV[c])return OV[c];try{return DN.of(c.toUpperCase())}catch(e){return c.toUpperCase()}};
+function buildOpts(){
+  const mk=l=>l.map(c=>[c,nm(c)]).sort((a,b)=>a[1].localeCompare(b[1],'es')).map(([c,n])=>`<option value="${c}">${n}</option>`).join('');
+  return '<option value="">—</option><optgroup label="Américas">'+mk(AM)+'</optgroup><optgroup label="Resto del mundo">'+mk(ALL.filter(c=>!AM.includes(c)))+'</optgroup>';
+}
 const def=()=>({title:'ITTF Americas Championships Lima 2026',round:'',visible:true,server:0,
   players:[{name:'',flag:'pe'},{name:'',flag:'br'}],sets:[0,0],pts:[0,0],history:[],ver:2,pos:{a:'bl',x:40,y:255,s:1},slider:{on:true,sec:5,x:40,y:120,w:420},ticker:{on:true,speed:100,msgs:['Bienvenidos al ITTF Americas Championships Lima 2026']}});
 const load=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(!v)return def();const s=Object.assign(def(),v);if(s.ver!==2){s.pos=def().pos;s.ver=2}return s}catch(e){return def()}};
@@ -295,7 +303,7 @@ function initTicker(){tkMsgs.value=S.ticker.msgs.join('\n');tkSpeed.value=S.tick
 
 /* ---------- arranque ---------- */
 if(PANEL){
-  const opts='<option value="">—</option>'+Object.entries(C).sort((a,b)=>a[1].localeCompare(b[1])).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  const opts=buildOpts();
   f0.innerHTML=f1.innerHTML=opts;fill();initPhotos();initTicker();push();
 }else{
   const fit=()=>{overlay.style.transform='scale('+Math.min(innerWidth/1920,innerHeight/1080)+')'};
