@@ -53,6 +53,8 @@
   h3{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#8fa3d6}
   input,select,button{font:inherit;border-radius:5px;border:1px solid #444;background:#2a2d36;color:#fff;padding:6px}
   input,select{width:100%;box-sizing:border-box}
+  select option,select optgroup{background:#2a2d36;color:#fff}
+  select optgroup{color:#ffd400;font-weight:700;font-style:normal}
   button{cursor:pointer;background:#3a4157}button:hover{background:#4a5370}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .pl{background:#23262f;padding:8px;border-radius:8px}
@@ -90,8 +92,8 @@
 
   <h3>Jugadores</h3>
   <div class="grid">
-    <div class="pl"><label>Apellido(s) J1</label><input id="n0" placeholder="APELLIDO"><label>País</label><select id="f0"></select></div>
-    <div class="pl"><label>Apellido(s) J2</label><input id="n1" placeholder="APELLIDO"><label>País</label><select id="f1"></select></div>
+    <div class="pl"><label>Apellido(s) J1</label><input id="n0" placeholder="APELLIDO"><label>País</label><input id="q0" placeholder="Buscar país…" oninput="fc(0)" style="margin-bottom:4px"><select id="f0"></select></div>
+    <div class="pl"><label>Apellido(s) J2</label><input id="n1" placeholder="APELLIDO"><label>País</label><input id="q1" placeholder="Buscar país…" oninput="fc(1)" style="margin-bottom:4px"><select id="f1"></select></div>
   </div>
   <div class="row2"><button class="plus" onclick="applyInfo()">Aplicar datos</button><button onclick="swap()">⇄ Intercambiar lados</button></div>
 
@@ -151,6 +153,7 @@
     <textarea id="tkMsgs"></textarea>
     <div class="row2"><button class="plus" onclick="saveTicker()">Aplicar mensajes</button></div>
   </div>
+  <div style="margin-top:12px;color:#777;font-size:11px;text-align:center">Versión 22-oct · buscador de países</div>
 </div>
 
 <script>
@@ -163,9 +166,18 @@ const ALL=('ad ae af ag ai al am ao ar as at au aw ax az ba bb bd be bf bg bh bi
 const OV={tw:'Taipéi Chino',hk:'Hong Kong',mo:'Macao',xk:'Kosovo','gb-eng':'Inglaterra','gb-sct':'Escocia','gb-wls':'Gales','gb-nir':'Irlanda del Norte'};
 let DN=null;try{DN=new Intl.DisplayNames(['es'],{type:'region'})}catch(e){}
 const nm=c=>{if(OV[c])return OV[c];try{return DN.of(c.toUpperCase())}catch(e){return c.toUpperCase()}};
-function buildOpts(){
-  const mk=l=>l.map(c=>[c,nm(c)]).sort((a,b)=>a[1].localeCompare(b[1],'es')).map(([c,n])=>`<option value="${c}">${n}</option>`).join('');
-  return '<option value="">—</option><optgroup label="Américas">'+mk(AM)+'</optgroup><optgroup label="Resto del mundo">'+mk(ALL.filter(c=>!AM.includes(c)))+'</optgroup>';
+const norm=t=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function buildOpts(q=''){
+  const mk=l=>l.map(c=>[c,nm(c)]).filter(([c,n])=>!q||norm(n).includes(q)||c===q)
+    .sort((a,b)=>a[1].localeCompare(b[1],'es')).map(([c,n])=>`<option value="${c}">${n}</option>`).join('');
+  const g=(t,l)=>{const o=mk(l);return o?'<optgroup label="'+t+'">'+o+'</optgroup>':''};
+  const out=g('Américas',AM)+g('Resto del mundo',ALL.filter(c=>!AM.includes(c)));
+  return q?(out||'<option value="">Sin resultados</option>'):'<option value="">—</option>'+out;
+}
+function fc(i){
+  const s=document.getElementById('f'+i),prev=s.value,q=norm(document.getElementById('q'+i).value.trim());
+  s.innerHTML=buildOpts(q);
+  if(q){const f=[...s.options].find(o=>o.value);s.value=f?f.value:''}else s.value=prev;
 }
 const def=()=>({title:'ITTF Americas Championships Lima 2026',round:'',visible:true,server:0,
   players:[{name:'',flag:'pe'},{name:'',flag:'br'}],sets:[0,0],pts:[0,0],history:[],ver:2,pos:{a:'bl',x:40,y:255,s:1},slider:{on:true,sec:5,x:40,y:120,w:420},ticker:{on:true,speed:100,msgs:['Bienvenidos al ITTF Americas Championships Lima 2026']}});
@@ -233,7 +245,7 @@ function mv(h,v){ // h: +1 derecha, v: +1 abajo (dirección en pantalla)
 }
 function corner(a){S.pos.a=a;S.pos.x=40;S.pos.y=a[0]=='t'?130:(a=='bl'?255:145);push()}
 function scale(d){S.pos.s=Math.min(2,Math.max(.4,+(S.pos.s+d).toFixed(2)));push()}
-function fill(){title.value=S.title;round.value=S.round;n0.value=S.players[0].name;n1.value=S.players[1].name;f0.value=S.players[0].flag;f1.value=S.players[1].flag}
+function fill(){[0,1].forEach(i=>{const q=document.getElementById('q'+i);if(q&&q.value){q.value='';document.getElementById('f'+i).innerHTML=buildOpts()}});title.value=S.title;round.value=S.round;n0.value=S.players[0].name;n1.value=S.players[1].name;f0.value=S.players[0].flag;f1.value=S.players[1].flag}
 
 /* ---------- slider ---------- */
 const PH='ttPhotos',UPK='ttPhotosUp';
